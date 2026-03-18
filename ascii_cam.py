@@ -494,18 +494,24 @@ def main(stdscr):
             fps_str = f" {fps_display:.0f}fps "
             # Pad status to fill the row
             bar_row = h - 1
-            try:
-                bar = f" {status} "
-                # Truncate if too long
-                avail = w - len(fps_str)
-                if len(bar) > avail:
-                    bar = bar[:avail]
-                padding = w - len(bar) - len(fps_str)
-                full_bar = bar + " " * max(0, padding) + fps_str
-                stdscr.addstr(bar_row, 0, full_bar[:w-1], curses.A_REVERSE)
-                stdscr.refresh()
-            except curses.error:
-                pass
+            bar = f" {status} "
+            avail = w - len(fps_str)
+            if len(bar) > avail:
+                bar = bar[:avail]
+            padding = w - len(bar) - len(fps_str)
+            full_bar = bar + " " * max(0, padding) + fps_str
+            full_bar = full_bar[:w-1]
+
+            if current_mode == "hd":
+                # Use ANSI escapes for status bar to avoid curses conflict
+                sys.stdout.write(f"\033[{h};1H\033[7m{full_bar}\033[0m")
+                sys.stdout.flush()
+            else:
+                try:
+                    stdscr.addstr(bar_row, 0, full_bar, curses.A_REVERSE)
+                    stdscr.refresh()
+                except curses.error:
+                    pass
 
             # ── Input ──
             key = stdscr.getch()
